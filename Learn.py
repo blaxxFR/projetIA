@@ -11,6 +11,10 @@ import seaborn as sns
 #SKLEARN FUNCTIONS
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_validate
+from sklearn.model_selection import GridSearchCV, KFold, cross_val_score
+from sklearn.linear_model import LinearRegression
+from sklearn import linear_model
+from sklearn.metrics import mean_squared_error
 
 
 ########################      PRE-PROCESSING      #############################
@@ -35,7 +39,7 @@ def plot_correlation_matrix(data):
     plt.show()
     print(corr)
 
-plot_correlation_matrix(pd.DataFrame(datas))
+#plot_correlation_matrix(pd.DataFrame(datas))
 
 # d'apres la matrice de correlation, certaines entrées sont étroitement liées
 # on va donc supprimer certaines de ces valeurs pour conserver :
@@ -79,7 +83,56 @@ print("target train : \n", split_target_train)
 
 #######################      FIN TR_TST_SPLIT      ############################
 
-# PROCESS AVEC TRAIN TEST SPLIT #
+##################          PROCESS LINEAIRE            #######################
+# Regression linéaire
+reg_lin = LinearRegression().fit(split_train, split_target_train)
+
+# Regression lasso
+reg_lasso = linear_model.Lasso(alpha=0.01).fit(
+    split_train, split_target_train)
+
+# Regression ridge
+reg_ridge = linear_model.Ridge(alpha=0.01).fit(
+    split_train, split_target_train)
+
+# Regression elastic net
+reg_elastic = linear_model.ElasticNet().fit(
+    split_train, split_target_train)
+
+
+def get_score(reg, test, target_test):
+    score = reg.score(test, target_test)
+    # print the name of variable the regression and the score
+    print("Score de la regression : ", score)
+
+def get_mean_score(reg, test, target_test):
+    score = 0
+    for i in range(0, 10000):
+        score += reg.score(test, target_test)
+    print("mean score : ", score / 10000)
+
+
+def get_MSE(target_test, test):
+    score = mean_squared_error(target_test, test)
+    # print the name of variable the regression and the score
+    print("MEAN SQARED ERROR : ", score)
+
+get_score(reg_lin, split_test, split_target_test)
+get_score(reg_lasso, split_test, split_target_test)
+get_score(reg_ridge, split_test, split_target_test)
+get_score(reg_elastic, split_test, split_target_test)
+
+Y_pred = reg_lin.predict(split_test)
+
+
+# ploting the line graph of actual and predicted values
+plt.figure(figsize=(12, 5))
+plt.plot((Y_pred)[:80])
+plt.plot((np.array(split_target_test)[:80]))
+plt.legend(["Prediction", "valeur réelle"])
+plt.show()
+
+#####################          FIN PROCESS           ##########################
 
 #######################      CROSS VALIDATION      ############################
 
