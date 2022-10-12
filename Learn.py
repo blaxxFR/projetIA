@@ -15,7 +15,9 @@ from sklearn.model_selection import GridSearchCV, KFold, cross_val_score
 from sklearn.linear_model import LinearRegression
 from sklearn import linear_model
 from sklearn.metrics import mean_squared_error
-
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.multioutput import MultiOutputRegressor
 
 ########################      PRE-PROCESSING      #############################
 
@@ -65,10 +67,9 @@ split_train, split_test = train_test_split(datas, train_size=population_train)
 entrees = ['L_tot','rho', 'h', 'b']
 split_target_train = split_train.drop(columns=entrees)
 split_target_test = split_test.drop(columns=entrees)
+print(split_target_train)
 
-
-frequences = ["freq1", "freq2", "freq3", "freq4", 
-              "freq5", "freq6", "freq7", "freq8"]
+frequences = ["freq1", "freq2", "freq3", "freq4", "freq5", "freq6", "freq7", "freq8"]
 split_train = split_train.drop(columns=frequences)
 split_test = split_test.drop(columns=frequences)
 
@@ -124,12 +125,28 @@ get_score(reg_elastic, split_test, split_target_test)
 
 Y_pred = reg_lin.predict(split_test)
 
+###### RANDOM FOREST #######
+print(split_train.shape)
+print(type(split_target_train))
 
+
+regr_multirf = MultiOutputRegressor(
+    RandomForestRegressor(n_estimators=100, random_state=0)
+)
+regr_multirf.fit(split_train, split_target_train)
+
+
+get_score(regr_multirf, split_test, split_target_test)
+
+####### PLOT PREDICTIONS #######
+Y_forest_pred = regr_multirf.predict(split_test)
 # ploting the line graph of actual and predicted values
 plt.figure(figsize=(12, 5))
+plt.plot((Y_forest_pred)[:80])
 plt.plot((Y_pred)[:80])
 plt.plot((np.array(split_target_test)[:80]))
-plt.legend(["Prediction", "valeur réelle"])
+plt.legend(
+    ["Prediction_forect", "Prediction Regression Linéraire", "valeur réelle"])
 plt.show()
 
 #####################          FIN PROCESS           ##########################
