@@ -23,9 +23,9 @@ from sklearn.multioutput import MultiOutputRegressor
 
 
 #ouverture et lecture des deux fichiers csv : frequences propres et entrées 
-freq = pd.read_csv(open("test.csv", "r"),
+freq = pd.read_csv(open("testPOC.csv", "r"),
                     delimiter=",")
-inputs = pd.read_csv(open("dict.csv", "r"),
+inputs = pd.read_csv(open("dictPOC.csv", "r"),
                     delimiter=",")
 #2 dataFrames sont créés
 
@@ -46,7 +46,7 @@ def plot_correlation_matrix(data):
 # d'apres la matrice de correlation, certaines entrées sont étroitement liées
 # on va donc supprimer certaines de ces valeurs pour conserver :
 # hauteur h, base b, la masse volumique rho, la longueur de la poutre L_tot
-corr = ['NbElts', 'S', 'I', 'L', 'E']
+corr = ['NbElts', 'rho', 'h', 'b', 'I', 'L', "freq2", "freq3", "freq4", "freq5", "freq6", "freq7", "freq8"]
 datas = datas = datas.drop(columns=corr)
 print(datas)
 ######################      FIN PRE-PROCESSING      ###########################
@@ -64,12 +64,12 @@ split_train, split_test = train_test_split(datas, train_size=population_train)
 # On extrait les données qui serviront d'objectif à atteindre, soit ici les 
 # 8 fréquences propres à prédire
 
-entrees = ['L_tot','rho', 'h', 'b']
+entrees = ['S', 'L_tot', 'E']
 split_target_train = split_train.drop(columns=entrees)
 split_target_test = split_test.drop(columns=entrees)
 print(split_target_train)
 
-frequences = ["freq1", "freq2", "freq3", "freq4", "freq5", "freq6", "freq7", "freq8"]
+frequences = ["freq1"]
 split_train = split_train.drop(columns=frequences)
 split_test = split_test.drop(columns=frequences)
 
