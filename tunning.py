@@ -1,5 +1,6 @@
 #VISUALISATION ET IMPORT DE DONNEES
 import os
+import pickle
 import numpy as np
 import pandas as pd
 import torch
@@ -22,15 +23,16 @@ from sklearn.metrics import mean_squared_error
 from sklearn import linear_model
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import make_pipeline
+import joblib
 
 
 ########################      PRE-PROCESSING      #############################
 
 
 #ouverture et lecture des deux fichiers csv : frequences propres et entrées 
-freq = pd.read_csv(open("test.csv", "r"),
+freq = pd.read_csv(open("testPOC.csv", "r"),
                     delimiter=",")
-inputs = pd.read_csv(open("dict.csv", "r"),
+inputs = pd.read_csv(open("dictPOC.csv", "r"),
                     delimiter=",")
 #2 dataFrames sont créés
 
@@ -56,7 +58,6 @@ def plot_correlation_matrix(data):
 to_drop = ['NbElts', 'S', 'I', 'L', 'E','freq2','freq3','freq4','freq5','freq6','freq7','freq8']
 datas = datas.drop(columns=to_drop)
 #keep 10000 random values of datas
-datas = datas.sample(n=10000, random_state=1)
 
 
 print(datas)
@@ -103,21 +104,52 @@ reg_test = RandomForestRegressor()
            }
 """
 
-my_grid_poly ={'polynomialfeatures__degree': np.arange(10),
+my_grid_poly ={'polynomialfeatures__degree': [9],
                 'linearregression__fit_intercept': [True, False],
                 'linearregression__normalize': [True, False]}
 def PolynomialRegression(degree=2, **kwargs):
     return make_pipeline(PolynomialFeatures(degree), LinearRegression(**kwargs))
 
-poly_reg_model = PolynomialRegression(2)
-
-grid_search = GridSearchCV(poly_reg_model, my_grid_poly, cv=5, n_jobs=-1, verbose=2)
+poly_reg_model = PolynomialRegression(9, fit_intercept=True, normalize=True)
+poly_reg_model.fit(split_train, split_target_train)
+print("\n\n\n\n",poly_reg_model.score(split_train, split_target_train))
+grid_search = GridSearchCV(poly_reg_model, my_grid_poly, cv=5, n_jobs=-1, verbose=2,)
 #print best score and model
 # Ravel plit_target_train
-grid_search.fit(split_train, split_target_train)
+jesuisunfdp = grid_search.fit(split_train, split_target_train)
 print(grid_search.best_score_)
 print(grid_search.best_estimator_)
 print(grid_search.best_params_)
+
+
+print("AVANT PREDIC \n\n\n\n\n\n")
+Y_grid_search = grid_search.predict(split_test)
+
+# save the model to disk with joblib
+filename = 'finalized_model.sav'
+joblib.dump(grid_search, filename)
+
+#
+
+# save split_test to disk
+filename = 'split_test.sav'
+joblib.dump(split_test, filename)
+
+#save split_target_test to disk
+filename = 'split_target_test.sav'
+joblib.dump(split_target_test, filename)
+
+filename = 'jesuisunfdp.sav'
+joblib.dump(jesuisunfdp, filename)
+
+print(Y_grid_search)
+plt.figure(figsize=(12, 5))
+plt.plot((Y_grid_search)[:80])
+plt.plot((np.array(split_target_test)[:80]))
+
+plt.legend(
+    ['Y_grid_search', 'split_target_test'])
+plt.show()
 
 
 

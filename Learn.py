@@ -2,6 +2,8 @@
 import os
 import numpy as np
 import pandas as pd
+from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.preprocessing import PolynomialFeatures
 import torch
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -14,7 +16,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.model_selection import GridSearchCV, KFold, cross_val_score
 from sklearn.linear_model import LinearRegression
 from sklearn import linear_model
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.multioutput import MultiOutputRegressor
@@ -23,9 +25,9 @@ from sklearn.multioutput import MultiOutputRegressor
 
 
 #ouverture et lecture des deux fichiers csv : frequences propres et entrées 
-freq = pd.read_csv(open("testPOC.csv", "r"),
+freq = pd.read_csv(open("test.csv", "r"),
                     delimiter=",")
-inputs = pd.read_csv(open("dictPOC.csv", "r"),
+inputs = pd.read_csv(open("dict.csv", "r"),
                     delimiter=",")
 #2 dataFrames sont créés
 
@@ -46,8 +48,7 @@ def plot_correlation_matrix(data):
 # d'apres la matrice de correlation, certaines entrées sont étroitement liées
 # on va donc supprimer certaines de ces valeurs pour conserver :
 # hauteur h, base b, la masse volumique rho, la longueur de la poutre L_tot
-corr = ['NbElts', 'rho', 'h', 'b', 'I', 'L', "freq2", "freq3", "freq4", "freq5", "freq6", "freq7", "freq8"]
-datas = datas = datas.drop(columns=corr)
+corr = ['NbElts', 'S', 'I', 'L', 'E','freq2','freq3','freq4','freq5','freq6','freq7','freq8']
 print(datas)
 ######################      FIN PRE-PROCESSING      ###########################
 
@@ -64,7 +65,7 @@ split_train, split_test = train_test_split(datas, train_size=population_train)
 # On extrait les données qui serviront d'objectif à atteindre, soit ici les 
 # 8 fréquences propres à prédire
 
-entrees = ['S', 'L_tot', 'E']
+entrees = ['L_tot','rho', 'h', 'b']
 split_target_train = split_train.drop(columns=entrees)
 split_target_test = split_test.drop(columns=entrees)
 print(split_target_train)
@@ -138,6 +139,49 @@ regr_multirf.fit(split_train, split_target_train)
 
 get_score(regr_multirf, split_test, split_target_test)
 
+
+
+################### Polynomial Regression #####################
+# make polynimial regression with these hyperparameters linearregression__fit_intercept': True, 'linearregression__normalize': True, 'polynomialfeatures__degree': 9
+
+
+polynomial_features = PolynomialFeatures(degree=9)
+linear_regression = LinearRegression(fit_intercept=True, normalize=True)
+pipeline = Pipeline(
+    [
+        ("polynomial_features", polynomial_features),
+        ("linear_regression", linear_regression),
+    ]
+)
+pipeline.fit(split_train, split_target_train)
+#predict
+
+def PolynomialRegression(degree=9, **kwargs):
+    return make_pipeline(PolynomialFeatures(degree), LinearRegression(**kwargs))
+
+poly_reg_model = PolynomialRegression(9, fit_intercept=True, normalize=True)
+poly_reg_model.fit(split_train, split_target_train)
+print("Score du modèle polynomial normalement 99% : ", poly_reg_model.score(split_test, split_target_test))
+
+# predict 10000 times and give best score 
+tmp_score = 0 
+for i in range(0, 1000):
+    score = pipeline.score(split_test, split_target_test)
+    if score > tmp_score:
+        tmp_score = score
+
+print("score polynomial regression : ", tmp_score)
+
+Y_poly_pred = pipeline.predict(split_test)
+
+
+print("Score de la regression polynomiale : ", pipeline.score(split_test, split_target_test))
+get_score(pipeline, split_test, split_target_test)
+
+
+
+
+
 ####### PLOT PREDICTIONS #######
 Y_forest_pred = regr_multirf.predict(split_test)
 # ploting the line graph of actual and predicted values
@@ -145,8 +189,9 @@ plt.figure(figsize=(12, 5))
 plt.plot((Y_forest_pred)[:80])
 plt.plot((Y_pred)[:80])
 plt.plot((np.array(split_target_test)[:80]))
+plt.plot((Y_poly_pred)[:80])
 plt.legend(
-    ["Prediction_forect", "Prediction Regression Linéraire", "valeur réelle"])
+    ["Prediction_forect", "Prediction Regression Linéraire", "valeur réelle","Prediction Regression Polynomiale"])
 plt.show()
 
 #####################          FIN PROCESS           ##########################
