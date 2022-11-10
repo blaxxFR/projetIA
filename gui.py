@@ -66,10 +66,14 @@ class Window:
         self.rhomat = {'Acier de construction': 7850, 'Acier inxydable': 7800, 'Aluminum': 2700, 'Cuivre': 8900, 'Titane': 4510, 'Verre': 2500, 'Béton': 2400}
 
         self.model_rectangle = pickle.load(open('model_rectangle.pkl', 'rb'))
+        self.model_rectangle_other_freq = pickle.load(open('model_rectangle_other_freq.pkl', 'rb'))
         self.model_circle = pickle.load(open('model_cercle.pkl', 'rb'))
+        self.model_circle_other_freq = pickle.load(open('model_cercle_other_freq.pkl', 'rb'))
         # self.model_ipn = pickle.load(open('model_ipn.pkl', 'rb'))
         self.model_rectangle_creuse = pickle.load(open('model_rectangle_creux.pkl', 'rb'))
+        self.model_rectangle_creuse_other_freq = pickle.load(open('model_rectangle_creux_other_freq.pkl', 'rb'))
         self.model_circle_creuse = pickle.load(open('model_cercle_creux.pkl', 'rb'))
+        self.model_circle_creuse_other_freq = pickle.load(open('model_cercle_creux_other_freq.pkl', 'rb'))
          # create a window with the layout
    
         self.window = ps.Window('Akinapoutre', self.layout)
@@ -102,7 +106,7 @@ class Window:
 
         # 'NbElts', 'S', 'I', 'L', 'E'
         if(self.check_input()):
-            var_values = tuple()
+            var_values = list()
             type_bar = self.tab_group.Get()
             var_values = self.get_input(type_bar)
             if type_bar == 'rectangle':
@@ -111,32 +115,79 @@ class Window:
                 length = float(var_values[0])/100
                 h = float(var_values[1])/100
                 b = float(var_values[2])/100
-                var_values = (length,float(self.rhomat[var_values [3]]),h,b)
-                #convert var_values to arrayd
+                var_values = [length,float(self.rhomat[var_values [3]]),h,b]
                 var_values = np.array(var_values).reshape(1, -1)
-                print(self.model_rectangle.predict(var_values))
-                # write in multiline the result
-                tmp_string = "Frequence 1 = " + str(self.model_rectangle.predict(var_values)[0][0]) + "Hz \n bordel de queue "
+                freq1 = self.model_rectangle.predict(var_values)[0][0]
+                #aff freq 1 to var_values
+                var_values = np.append(var_values,freq1)
+                var_values = np.array(var_values).reshape(1, -1)
+                other_freq = self.model_rectangle_other_freq.predict(var_values)
+
+
+                
+                tmp_string= "Frequence 1 = " + str(freq1) + " Hz\n"
+                # array var value +  self.model_rectangle.predict(var_values)[0][0]
+                for i in range(len(other_freq[0])):
+                    tmp_string += "Frequence "+ str(i+2) + " = " + str(other_freq[0][i]) + " Hz\n"
                 self.window['output'].update(tmp_string)
 
             if type_bar == 'circle':
                 #  ['L_tot','rho', 'r']
-                #L_tho = L_tot/100
+                #L_tho = L_tot/100S
                 length = float(var_values[0])/100
                 r = float(var_values[1])/100
                 var_values = (length,float(self.rhomat[var_values [2]]),r)
-                #convert var_values to array
                 var_values = np.array(var_values).reshape(1, -1)
-                print(self.model_circle.predict(var_values))
-                # write in multiline the result
-                tmp_string = "Frequence 1 = " + str(self.model_circle.predict(var_values)[0][0]) + "Hz \n"
+                freq1 = self.model_circle.predict(var_values)[0][0]
+                #aff freq 1 to var_values
+                var_values = np.append(var_values,freq1)
+                var_values = np.array(var_values).reshape(1, -1)
+                other_freq = self.model_circle_other_freq.predict(var_values)
+                tmp_string= "Frequence 1 = " + str(freq1) + " Hz\n"
+                # array var value +  self.model_rectangle.predict(var_values)[0][0]
+                for i in range(len(other_freq[0])):
+                    tmp_string += "Frequence "+ str(i+2) + " = " + str(other_freq[0][i]) + " Hz\n"
                 self.window['output'].update(tmp_string)
             if type_bar == 'ipn':
                 surface_ipn = surface_ipn(var_values[1], var_values[2])
             if type_bar == 'rectangle_creuse':
-                surface_rectangle_creuse = surface_rectangle_creuse(var_values[1], var_values[2], var_values[3], var_values[4])
+                #  ['L_tot','rho', 'h','b','hr','br']
+                #L_tho = L_tot/100
+                length = float(var_values[0])/100
+                h = float(var_values[1])/100
+                b = float(var_values[2])/100
+                hr = float(var_values[3])/100
+                br = float(var_values[4])/100
+                var_values = [length,float(self.rhomat[var_values [5]]),h,b,hr,br]
+                var_values = np.array(var_values).reshape(1, -1)
+                freq1 = self.model_rectangle_creuse.predict(var_values)[0][0]
+                #aff freq 1 to var_values
+                var_values = np.append(var_values,freq1)
+                var_values = np.array(var_values).reshape(1, -1)
+                other_freq = self.model_rectangle_creuse_other_freq.predict(var_values)
+                tmp_string= "Frequence 1 = " + str(freq1) + " Hz\n"
+                # array var value +  self.model_rectangle.predict(var_values)[0][0]
+                for i in range(len(other_freq[0])):
+                    tmp_string += "Frequence "+ str(i+2) + " = " + str(other_freq[0][i]) + " Hz\n"
+                self.window['output'].update(tmp_string)
             if type_bar == 'circle_creuse':
-                surface_circle_creuse = surface_circle_creuse(var_values[1], var_values[2])
+                #  ['L_tot','rho', 'r_ext','r_int']
+                #L_tho = L_tot/100S
+                length = float(var_values[0])/100
+                r = float(var_values[1])/100
+                rr = float(var_values[2])/100
+                var_values = (length,float(self.rhomat[var_values [3]]),r,rr)
+                var_values = np.array(var_values).reshape(1, -1)
+                freq1 = self.model_circle_creuse.predict(var_values)[0][0]
+                #aff freq 1 to var_values
+                var_values = np.append(var_values,freq1)
+                var_values = np.array(var_values).reshape(1, -1)
+                other_freq = self.model_circle_creuse_other_freq.predict(var_values)
+                tmp_string= "Frequence 1 = " + str(freq1) + " Hz\n"
+                # array var value +  self.model_rectangle.predict(var_values)[0][0]
+                for i in range(len(other_freq[0])):
+                    tmp_string += "Frequence "+ str(i+2) + " = " + str(other_freq[0][i]) + " Hz\n"
+                self.window['output'].update(tmp_string)
         else :
             # popup error and reset input
             ps.popup('Error', 'Please check your input')
