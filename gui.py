@@ -1,9 +1,20 @@
+import pickle
 import PySimpleGUI as  ps
 import matplotlib.pyplot as plt
+import numpy as np
+from surface import *
 
+
+def isfloat(num):
+    try:
+        float(num)
+        return True
+    except ValueError:
+        return False
 class Window:
     def __init__(self):
-        self.commun_input = [[ps.Text('Material'), ps.Combo(['Aluminium', 'Copper', 'Steel', 'Titanium'], key='material')],
+        # Acier de construction': 210E9, 'Acier inxydable': 203E9, 'Aluminum': 69E9, 'Cuivre': 124E9, 'Titane': 114E9, 'Verre': 69E9, 'Béton'
+        self.commun_input = [[ps.Text('Material'), ps.Combo(['Acier de construction','Acier inxydable','Aluminum','Cuivre','Titane','Verre','Béton'], key='material')],
                             [ps.Text('Length'), ps.InputText(key='L_tot')],
                             [ps.Text('nbr_elements'), ps.InputText(key='nbr_elements')],
                 
@@ -51,7 +62,14 @@ class Window:
         self.layout_rectangle_creuse = self.layout + self.rectangle_creuse_input
         self.layout_circle_creuse = self.layout + self.circle_creuse_input
 
+        self.emat= {'Acier de construction': 210E9, 'Acier inxydable': 203E9, 'Aluminum': 69E9, 'Cuivre': 124E9, 'Titane': 114E9, 'Verre': 69E9, 'Béton': 30E9}
+        self.rhomat = {'Acier de construction': 7850, 'Acier inxydable': 7800, 'Aluminum': 2700, 'Cuivre': 8900, 'Titane': 4510, 'Verre': 2500, 'Béton': 2400}
 
+        self.model_rectangle = pickle.load(open('model_rectangle.pkl', 'rb'))
+        self.model_circle = pickle.load(open('model_cercle.pkl', 'rb'))
+        # self.model_ipn = pickle.load(open('model_ipn.pkl', 'rb'))
+        self.model_rectangle_creuse = pickle.load(open('model_rectangle_creux.pkl', 'rb'))
+        self.model_circle_creuse = pickle.load(open('model_cercle_creux.pkl', 'rb'))
          # create a window with the layout
    
         self.window = ps.Window('Bar', self.layout)
@@ -59,6 +77,7 @@ class Window:
     def selected_tab(self):
         """return the selected tab"""
         return self.tab_group.find_key_from_tab_name()
+
         
 
     def event_loop(self,window):
@@ -67,7 +86,7 @@ class Window:
             if event == 'Quit' or event == ps.WIN_CLOSED:
                 break
             elif event == 'Predict':
-                print(self.get_input(self.tab_group.Get()))
+                print(self.predict())
 
 
                             
@@ -79,7 +98,38 @@ class Window:
     def close(self):
         self.window.close()
 
-    
+    def predict(self):
+
+        # 'NbElts', 'S', 'I', 'L', 'E'
+        if(self.check_input()):
+            var_values = tuple()
+            type_bar = self.tab_group.Get()
+            var_values = self.get_input(type_bar)
+            if type_bar == 'rectangle':
+                #  ['L_tot','rho', 'h','b']
+                #L_tho = L_tot/100
+                length = float(var_values[0])/100
+                h = float(var_values[1])/100
+                b = float(var_values[2])/100
+                var_values = (length,float(self.rhomat[var_values [3]]),h,b)
+                #convert var_values to array
+                var_values = np.array(var_values).reshape(1, -1)
+                print(self.model_rectangle.predict(var_values))
+                # write in multiline the result
+                self.window['output'].update(self.model_rectangle.predict(var_values))
+
+            if type_bar == 'circle':
+                surface_circle = surface_circle(var_values[1])
+            if type_bar == 'ipn':
+                surface_ipn = surface_ipn(var_values[1], var_values[2])
+            if type_bar == 'rectangle_creuse':
+                surface_rectangle_creuse = surface_rectangle_creuse(var_values[1], var_values[2], var_values[3], var_values[4])
+            if type_bar == 'circle_creuse':
+                surface_circle_creuse = surface_circle_creuse(var_values[1], var_values[2])
+        else :
+            # popup error and reset input
+            ps.popup('Error', 'Please check your input')
+
         
     def get_input(self,type):
         # return input according to the type of bar
@@ -97,25 +147,58 @@ class Window:
             return None
     
 
-        
-
-        
-
     def check_input(self):
-        """check if the input is valid
-        a valid input is a tuple of interger or float"""
-        try:
-            input1, input2, input3, input4, input5, input6, input7 = self.get_input()
-            input1 = float(input1)
-            input2 = float(input2)
-            input3 = float(input3)
-            input4 = float(input4)
-            input5 = float(input5)
-            return True
-        except ValueError:
+        print("ALLLER")
+        print(self.tab_group.Get())
+        # if tab is rectabgle, check if input are correct 
+        if self.tab_group.Get() == 'rectangle':
+            print("oskour")
+            valeurs = self.get_input('rectangle')
+            print(valeurs)
+            if not(valeurs[0] == '' or valeurs[1] == '' or valeurs[2] == '' or valeurs[3] == '' or valeurs[4] == ''):
+                if (valeurs[0].isdigit() or isfloat(valeurs[0])) and (valeurs[1].isdigit() or isfloat(valeurs[1])) and (valeurs[2].isdigit() or isfloat(valeurs[2])) and (valeurs[4].isdigit() or isfloat(valeurs[4])):
+                    if(float(valeurs[0]) > 0 and float(valeurs[1]) > 0 and float(valeurs[2]) > 0 and float(valeurs[4]) > 0):
+                        return True
+            else:
+                return False
+        elif self.tab_group.Get() == 'circle':
+            valeurs = self.get_input('circle')
+            if not(valeurs[0] == '' or valeurs[1] == '' or valeurs[2] == '' or valeurs[3] == ''):
+                if (valeurs[0].isdigit() or isfloat(valeurs[0])) and (valeurs[1].isdigit() or isfloat(valeurs[1])) and (valeurs[3].isdigit() or isfloat(valeurs[3])):
+                    if(valeurs[0] > 0 and valeurs[1] > 0 and valeurs[3] > 0):
+                        return True
+            else:
+                return False
+                 
+        elif self.tab_group.Get() == 'ipn':
+            valeurs = self.get_input('ipn')
+            if not(valeurs[0] == '' or valeurs[1] == '' or valeurs[2] == '' or valeurs[3] == '' or valeurs[4] == ''):
+                if (valeurs[0].isdigit() or isfloat(valeurs[0])) and (valeurs[1].isdigit() or isfloat(valeurs[1])) and (valeurs[2].isdigit() or isfloat(valeurs[2])) and (valeurs[4].isdigit() or isfloat(valeurs[4])):
+                    if(valeurs[0] > 0 and valeurs[1] > 0 and valeurs[2] > 0 and valeurs[4] > 0):
+                        return True
+            else:
+                return False
+        elif self.tab_group.Get() == 'rectangle_creuse':
+            valeurs = self.get_input('rectangle_creuse')
+            if not(valeurs[0] == '' or valeurs[1] == '' or valeurs[2] == '' or valeurs[3] == '' or valeurs[4] == '' or valeurs[5] == '' or valeurs[6] == ''):
+                if (valeurs[0].isdigit() or isfloat(valeurs[0])) and (valeurs[1].isdigit() or isfloat(valeurs[1])) and (valeurs[2].isdigit() or isfloat(valeurs[2])) and (valeurs[3].isdigit() or isfloat(valeurs[3])) and (valeurs[4].isdigit() or isfloat(valeurs[4])) and (valeurs[6].isdigit() or isfloat(valeurs[6])):
+                    if(valeurs[0] > 0 and valeurs[1] > 0 and valeurs[2] > 0 and valeurs[3] > 0 and valeurs[4] > 0 and valeurs[6] > 0):
+                        return True
+            else:
+                return False
+        elif self.tab_group.Get() == 'circle_creuse':
+            valeurs = self.get_input('circle_creuse')
+            if not(valeurs[0] == '' or valeurs[1] == '' or valeurs[2] == '' or valeurs[3] == '' or valeurs[4] == ''):
+                if (valeurs[0].isdigit() or isfloat(valeurs[0])) and (valeurs[1].isdigit() or isfloat(valeurs[1])) and (valeurs[2].isdigit() or isfloat(valeurs[2])) and (valeurs[4].isdigit() or isfloat(valeurs[4])):
+                    if(valeurs[0] > 0 and valeurs[1] > 0 and valeurs[2] > 0 and valeurs[4] > 0):
+                        return True
+            else:
+                return False
+        else:
             return False
 
 
+            
 if __name__ == '__main__':
     window = Window()
     window.start()
