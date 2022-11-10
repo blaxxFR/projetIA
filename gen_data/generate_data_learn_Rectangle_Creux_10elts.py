@@ -132,7 +132,7 @@ class myDataset(Dataset):
 from torch.utils.data import DataLoader, Dataset 
 targets_tensor=torch.tensor([])
 print("---------start------")
-sample_nb=2500
+sample_nb=10000
 test_dataset = myDataset(sample_nb)    #choisi le dataset en fonction des données enoncées
 
 
