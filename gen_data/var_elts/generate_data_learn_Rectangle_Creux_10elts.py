@@ -113,12 +113,14 @@ def createdata(nbElements,nbFreq): #crée le jeu de données
 class myDataset(Dataset):
     def __init__(self, NBsamples):  #idf = nb defauts
         self.samples=NBsamples #sample : attribut de la classe
-        NbElts = 10
         NbFreq = 8
 
         self.y_data = []
         self.x_data = []
         for i in range(NBsamples):
+            NbElts = randint(10, 50)
+            if i % 1000 == 0:
+                print(i)
             inputs, outputs = createdata(NbElts, NbFreq)  # crée les fréquences en prenant en compte les défauts
             # passe la sortie réelle : niveau de défaut des élements associé à ces fréquences en tenseur
             self.y_data.append(torch.tensor(outputs, dtype=torch.float32))
@@ -132,7 +134,7 @@ class myDataset(Dataset):
 from torch.utils.data import DataLoader, Dataset 
 targets_tensor=torch.tensor([])
 print("---------start------")
-sample_nb=10000
+sample_nb=50000
 test_dataset = myDataset(sample_nb)    #choisi le dataset en fonction des données enoncées
 
 

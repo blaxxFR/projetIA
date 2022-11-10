@@ -111,12 +111,14 @@ def createdata(nbElements,nbFreq): #crée le jeu de données
 class myDataset(Dataset):
     def __init__(self, NBsamples):  #idf = nb defauts
         self.samples=NBsamples #sample : attribut de la classe
-        NbElts = 10
         NbFreq = 8
 
         self.y_data = []
         self.x_data = []
         for i in range(NBsamples):
+            NbElts = randint(10, 50)
+            if i % 1000 == 0:
+                print(i)
             inputs, outputs = createdata(NbElts, NbFreq)  # crée les fréquences en prenant en compte les défauts
             # passe la sortie réelle : niveau de défaut des élements associé à ces fréquences en tenseur
             self.y_data.append(torch.tensor(outputs, dtype=torch.float32))
@@ -130,7 +132,7 @@ class myDataset(Dataset):
 from torch.utils.data import DataLoader, Dataset 
 targets_tensor=torch.tensor([])
 print("---------start------")
-sample_nb=2500
+sample_nb=25000
 test_dataset = myDataset(sample_nb)    #choisi le dataset en fonction des données enoncées
 
 
@@ -141,7 +143,7 @@ for i in range(len(test_dataset.y_data)):
     python_list_from_pytorch_tensor = np.vstack((python_list_from_pytorch_tensor, test_dataset.y_data[i].tolist()))
 
 
-with open('test_Cercle_Creux.csv', 'w') as f:
+with open('test_Cercle_Creux_var.csv', 'w') as f:
     writer = csv.writer(f)
     header = ''
     for i in python_list_from_pytorch_tensor:
@@ -153,7 +155,7 @@ with open('test_Cercle_Creux.csv', 'w') as f:
         f.write('\n')        
     
 
-with open('dict_Cercle_Creux.csv', 'w') as csv_file:
+with open('dict_Cercle_Creux_var.csv', 'w') as csv_file:
     writer = csv.writer(csv_file)
     header = ''
     for key,_ in dicttab[0].items():
