@@ -44,7 +44,7 @@ class Window:
        # create a layout, user can initialiy choose type of bar, commun input originaly appear, then accoring user choise of bar, show other input
 
         self.tab_group = ps.TabGroup([[ps.Tab('Rectangle', self.rectangle_input,key='rectangle'), 
-                                                          ps.Tab('ipn', self.Ipn,key='ipn'),
+                                        
                                                           ps.Tab('Circle', self.circle_input,key='circle'),
                                                           ps.Tab('Rectangle_creuse', self.rectangle_creuse_input,key='rectangle_creuse'),
                                                           ps.Tab('Circle_creuse', self.circle_creuse_input,key='circle_creuse')]], enable_events=True, key='tabgroup')
@@ -72,7 +72,7 @@ class Window:
         self.model_circle_creuse = pickle.load(open('model_cercle_creux.pkl', 'rb'))
          # create a window with the layout
    
-        self.window = ps.Window('Bar', self.layout)
+        self.window = ps.Window('Akinapoutre', self.layout)
        
     def selected_tab(self):
         """return the selected tab"""
@@ -112,14 +112,25 @@ class Window:
                 h = float(var_values[1])/100
                 b = float(var_values[2])/100
                 var_values = (length,float(self.rhomat[var_values [3]]),h,b)
-                #convert var_values to array
+                #convert var_values to arrayd
                 var_values = np.array(var_values).reshape(1, -1)
                 print(self.model_rectangle.predict(var_values))
                 # write in multiline the result
-                self.window['output'].update(self.model_rectangle.predict(var_values))
+                tmp_string = "Frequence 1 = " + str(self.model_rectangle.predict(var_values)[0][0]) + "Hz \n bordel de queue "
+                self.window['output'].update(tmp_string)
 
             if type_bar == 'circle':
-                surface_circle = surface_circle(var_values[1])
+                #  ['L_tot','rho', 'r']
+                #L_tho = L_tot/100
+                length = float(var_values[0])/100
+                r = float(var_values[1])/100
+                var_values = (length,float(self.rhomat[var_values [2]]),r)
+                #convert var_values to array
+                var_values = np.array(var_values).reshape(1, -1)
+                print(self.model_circle.predict(var_values))
+                # write in multiline the result
+                tmp_string = "Frequence 1 = " + str(self.model_circle.predict(var_values)[0][0]) + "Hz \n"
+                self.window['output'].update(tmp_string)
             if type_bar == 'ipn':
                 surface_ipn = surface_ipn(var_values[1], var_values[2])
             if type_bar == 'rectangle_creuse':
@@ -165,7 +176,7 @@ class Window:
             valeurs = self.get_input('circle')
             if not(valeurs[0] == '' or valeurs[1] == '' or valeurs[2] == '' or valeurs[3] == ''):
                 if (valeurs[0].isdigit() or isfloat(valeurs[0])) and (valeurs[1].isdigit() or isfloat(valeurs[1])) and (valeurs[3].isdigit() or isfloat(valeurs[3])):
-                    if(valeurs[0] > 0 and valeurs[1] > 0 and valeurs[3] > 0):
+                    if(float(valeurs[0]) > 0 and float(valeurs[1]) > 0 and float(valeurs[3]) > 0):
                         return True
             else:
                 return False
@@ -174,7 +185,7 @@ class Window:
             valeurs = self.get_input('ipn')
             if not(valeurs[0] == '' or valeurs[1] == '' or valeurs[2] == '' or valeurs[3] == '' or valeurs[4] == ''):
                 if (valeurs[0].isdigit() or isfloat(valeurs[0])) and (valeurs[1].isdigit() or isfloat(valeurs[1])) and (valeurs[2].isdigit() or isfloat(valeurs[2])) and (valeurs[4].isdigit() or isfloat(valeurs[4])):
-                    if(valeurs[0] > 0 and valeurs[1] > 0 and valeurs[2] > 0 and valeurs[4] > 0):
+                    if(float(valeurs[0]) > 0 and float(valeurs[1]) > 0 and float(valeurs[2]) > 0 and float(valeurs[4]) > 0):
                         return True
             else:
                 return False
@@ -182,7 +193,7 @@ class Window:
             valeurs = self.get_input('rectangle_creuse')
             if not(valeurs[0] == '' or valeurs[1] == '' or valeurs[2] == '' or valeurs[3] == '' or valeurs[4] == '' or valeurs[5] == '' or valeurs[6] == ''):
                 if (valeurs[0].isdigit() or isfloat(valeurs[0])) and (valeurs[1].isdigit() or isfloat(valeurs[1])) and (valeurs[2].isdigit() or isfloat(valeurs[2])) and (valeurs[3].isdigit() or isfloat(valeurs[3])) and (valeurs[4].isdigit() or isfloat(valeurs[4])) and (valeurs[6].isdigit() or isfloat(valeurs[6])):
-                    if(valeurs[0] > 0 and valeurs[1] > 0 and valeurs[2] > 0 and valeurs[3] > 0 and valeurs[4] > 0 and valeurs[6] > 0):
+                    if(float(valeurs[0]) > 0 and float(valeurs[1]) > 0 and float(valeurs[2]) > 0 and float(valeurs[3]) > 0 and float(valeurs[4]) > 0 and float(valeurs[6]) > 0):
                         return True
             else:
                 return False
@@ -190,7 +201,7 @@ class Window:
             valeurs = self.get_input('circle_creuse')
             if not(valeurs[0] == '' or valeurs[1] == '' or valeurs[2] == '' or valeurs[3] == '' or valeurs[4] == ''):
                 if (valeurs[0].isdigit() or isfloat(valeurs[0])) and (valeurs[1].isdigit() or isfloat(valeurs[1])) and (valeurs[2].isdigit() or isfloat(valeurs[2])) and (valeurs[4].isdigit() or isfloat(valeurs[4])):
-                    if(valeurs[0] > 0 and valeurs[1] > 0 and valeurs[2] > 0 and valeurs[4] > 0):
+                    if(float(valeurs[0]) > 0 and float(valeurs[1]) > 0 and float(valeurs[2]) > 0 and float(valeurs[4]) > 0):
                         return True
             else:
                 return False
