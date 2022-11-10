@@ -13,6 +13,7 @@ dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 def create_inputs(nbElements):
    #Mat = ['Acier de construction', 'Acier inxydable', 'Aluminum', 'Cuivre', 'Titane', 'Verre', 'Béton']
+
    EMat = [210E9, 203E9, 69E9, 124E9, 114E9, 69E9, 30E9]
    rhoMat =[7850, 7800, 2700, 8900, 4510, 2500, 2400]
    iMat = randint(0,6)
@@ -31,9 +32,8 @@ def create_inputs(nbElements):
    d['I'] = (d.get('b')*pow(d.get('h'),3))/12
    d['L'] = d.get('L_tot')/d.get('NbElts')
    d['E'] = EMat[iMat]
-   
    return d
-    
+
 
 def createdata(nbElements,nbFreq): #crée le jeu de données
     
@@ -105,32 +105,27 @@ def createdata(nbElements,nbFreq): #crée le jeu de données
 
     freq = freqHz[0:nbcapteur] # nbcapteur == nbFreq
     #print("freq : ", freq)
-    return np.float32(np.round(freq,4)) #Sortie fréquences en float avec 4 décimales
+    return Params, np.float32(np.round(freq,4)) #Sortie fréquences en float avec 4 décimales
 
 class myDataset(Dataset):
     def __init__(self, NBsamples):  #idf = nb defauts
         self.samples=NBsamples #sample : attribut de la classe
-        self.x_data = []
+        NbElts = 10
+        NbFreq = 8
+
         self.y_data = []
+        self.x_data = []
+        for i in range(NBsamples):
+            inputs, outputs = createdata(NbElts, NbFreq)  # crée les fréquences en prenant en compte les défauts
+            # passe la sortie réelle : niveau de défaut des élements associé à ces fréquences en tenseur
+            self.y_data.append(torch.tensor(outputs, dtype=torch.float32))
+            self.x_data.append(inputs)
         #self.i_df=i_df #nb de défaut choisi : attribut attribut de la classe
         
     def __len__(self):
-        return self.samples 
-    def __getitem__(self, idx): #choisi le nb de défauts
-        
-        NbElts=10
-        NbFreq=8
-        
-        outputs=createdata(NbElts, NbFreq) #crée les fréquences en prenant en compte les défauts
-         
-        #entrée : passe les fréquences en tensor
-        x_data = create_inputs(NbElts) 
-        
-        #passe la sortie réelle : niveau de défaut des élements associé à ces fréquences en tenseur
-        y_data = torch.tensor(outputs,dtype=torch.float32)
-        return  x_data, y_data
+        return self.samples
 
-'''
+
 from torch.utils.data import DataLoader, Dataset 
 targets_tensor=torch.tensor([])
 print("---------start------")
@@ -139,11 +134,11 @@ test_dataset = myDataset(sample_nb)    #choisi le dataset en fonction des donné
 
 
 python_list_from_pytorch_tensor = ["freq1", "freq2", "freq3", "freq4", "freq5", "freq6", "freq7", "freq8"]
-dicttab=[]
-for i in range(len(test_dataset)):
-    python_list_from_pytorch_tensor = np.vstack((python_list_from_pytorch_tensor, test_dataset[i][1].tolist()))
-    dicttab.append(test_dataset[i][0])
-print(python_list_from_pytorch_tensor)
+dicttab = test_dataset.x_data
+
+for i in range(len(test_dataset.y_data)):
+    python_list_from_pytorch_tensor = np.vstack((python_list_from_pytorch_tensor, test_dataset.y_data[i].tolist()))
+
 
 with open('test.csv', 'w') as f:
     writer = csv.writer(f)
@@ -157,7 +152,7 @@ with open('test.csv', 'w') as f:
         f.write('\n')        
     
 
-with open('dict.csv', 'w') as csv_file:  
+with open('dict.csv', 'w') as csv_file:
     writer = csv.writer(csv_file)
     header = ''
     for key,_ in dicttab[0].items():
@@ -173,17 +168,18 @@ with open('dict.csv', 'w') as csv_file:
         csv_file.write(data)
         csv_file.write('\n')
 
-'''
+
 '''test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)  #loader 
 #set to True to have the data reshuffled at every epoch  (default: False)
-print(test_loader.getitem())'''
-'''
-with open('test.csv', 'w') as csvfile:
+print(test_loader.getitem())
+
+with open('testPOC.csv', 'w') as csvfile:
     fieldnames = ['NbElts', 'L_tot', 'rho', 'h', 'b', 'S', 'I', 'L', 'E']
     writer = csv.DictWriter(csvfile, fieldnames)
     for i in range(len(test_dataset)):
         writer.writerows(test_dataset[i][0])
-     '''
+
+'''
 """test_loader_np = test_loader.numpy()
 test_loader_pd = pd.DataFrame(test_loader_np)
 test_loader_pd.to_csv("temp.csv")
@@ -194,5 +190,5 @@ with open('zebi.csv', 'w') as f:
     # using csv.writer method from CSV package
     write = csv.writer(f)
     write.writerows(list(test_loader))
-print("---------end------")
 """
+print("---------end------")
