@@ -15,7 +15,7 @@ class Window:
     def __init__(self):
         # Acier de construction': 210E9, 'Acier inxydable': 203E9, 'Aluminum': 69E9, 'Cuivre': 124E9, 'Titane': 114E9, 'Verre': 69E9, 'Béton'
         self.commun_input = [[ps.Text('Material'), ps.Combo(['Acier de construction','Acier inxydable','Aluminum','Cuivre','Titane','Verre','Béton'], key='material')],
-                            [ps.Text('Length'), ps.InputText(key='L_tot')],
+                            [ ps.Text('Length'), ps.InputText(key='L_tot')],
                             [ps.Text('nbr_elements'), ps.InputText(key='nbr_elements')],
                 
         ]
@@ -50,10 +50,45 @@ class Window:
                                                           ps.Tab('Circle_creuse', self.circle_creuse_input,key='circle_creuse')]], enable_events=True, key='tabgroup')
 
 
-        self.layout = [[ps.Text('Bar type'),self.tab_group],
+
+        # create a layout, user can initialiy choose type of bar, commun input originaly appear, then accoring user choise of bar, show other input
+        self.input_column = [
+                          [ps.Frame('Commun input', self.commun_input)],
+                          [self.tab_group],
+                          [ps.Button('Predict'), ps.Button('Exit')],
+                          [ps.Multiline(key='output', size=(75, 10))]]
+
+       
+        self.forme_column = [[ps.T('Choose what clicking a figure does', enable_events=True)],
+           [ps.R('Draw Rectangles', 1, key='-RECT-', enable_events=True)],
+           [ps.R('Draw Circle', 1, key='-CIRCLE-', enable_events=True)],
+           [ps.R('Draw Line', 1, key='-LINE-', enable_events=True)],
+           [ps.R('Draw point', 1,  key='-POINT-', enable_events=True)],
+           [ps.R('Erase item', 1, key='-ERASE-', enable_events=True)],
+           [ps.R('Erase all', 1, key='-CLEAR-', enable_events=True)],
+           [ps.R('Send to back', 1, key='-BACK-', enable_events=True)],
+           [ps.R('Bring to front', 1, key='-FRONT-', enable_events=True)],
+           [ps.R('Move Everything', 1, key='-MOVEALL-', enable_events=True)],
+           [ps.R('Move Stuff', 1, True, key='-MOVE-', enable_events=True)]  ,]
+
+        self.canvas_column = [[ps.Graph(canvas_size=(400, 400),
+        graph_bottom_left=(0, 0),
+        graph_top_right=(400, 400),
+        key="-GRAPH-",
+        change_submits=True,  # mouse click events
+        background_color='lightblue',
+        drag_submits=True),ps.Col(self.forme_column)]]
+        self.layout = [
+            [ ps.Column(self.input_column),ps.VSeparator(), ps.Column(self.canvas_column)]
+            
+        ]
+        
+        
+       
+        """        self.layout = [[ps.Text('Bar type'),self.tab_group],
                         [ps.Button('Predict'), ps.Button('Quit')]
                         + self.commun_input ,
-                        [ps.Multiline(key='output', size=(100, 10))]] 
+                        [ps.Multiline(key='output', size=(100, 10))]] """
 
 
         self.layout_rectangle = self.layout + self.rectangle_input
@@ -76,8 +111,16 @@ class Window:
         self.model_circle_creuse_other_freq = pickle.load(open('model_cercle_creux_other_freq.pkl', 'rb'))
          # create a window with the layout
    
-        self.window = ps.Window('Akinapoutre', self.layout)
+
        
+        
+
+        self.window = ps.Window('Akinapoutre', self.layout,finalize=True)
+        self.graph = self.window["-GRAPH-"]  # type: sg.Graph
+        self.dragging = False
+        self.start_point = self.end_point = self.prior_rect = None
+        self.graph.bind('<Button-3>', '+RIGHT+')
+
     def selected_tab(self):
         """return the selected tab"""
         return self.tab_group.find_key_from_tab_name()
@@ -91,6 +134,49 @@ class Window:
                 break
             elif event == 'Predict':
                 print(self.predict())
+            elif event == "-GRAPH-":  # if there's a "Graph" event, then it's a mouse
+                x, y = values["-GRAPH-"]
+                if not self.dragging:
+                    start_point = (x, y)
+                    self.dragging = True
+                    drag_figures = self.graph.get_figures_at_location((x,y))
+                    lastxy = x, y
+                else:
+                    end_point = (x, y)
+                if self.prior_rect:
+                    self.graph.delete_figure(prior_rect)
+                delta_x, delta_y = x - lastxy[0], y - lastxy[1]
+                lastxy = x,y
+                if None not in (start_point, self.end_point):
+                    if values['-MOVE-']:
+                        for fig in drag_figures:
+                            self.graph.move_figure(fig, delta_x, delta_y)
+                            self.graph.update()
+                    elif values['-RECT-']:
+                        prior_rect = self.graph.draw_rectangle(start_point, end_point,fill_color='green', line_color='red')
+                    elif values['-CIRCLE-']:
+                        prior_rect = self.graph.draw_circle(start_point, end_point[0]-start_point[0], fill_color='red', line_color='green')
+                    elif values['-LINE-']:
+                        prior_rect = self.graph.draw_line(start_point, end_point, width=4)
+                    elif values['-POINT-']:
+                        prior_rect = self.graph.draw_point(start_point, size=1)
+                    elif values['-ERASE-']:
+                        for figure in drag_figures:
+                            self.graph.delete_figure(figure)
+                    elif values['-CLEAR-']:
+                        self.graph.erase()
+                    elif values['-MOVEALL-']:
+                        self.graph.move(delta_x, delta_y)
+                    elif values['-FRONT-']:
+                        for fig in drag_figures:
+                            self.graph.bring_figure_to_front(fig)
+                    elif values['-BACK-']:
+                        for fig in drag_figures:
+                            self.graph.send_figure_to_back(fig)
+            elif event.endswith('+UP'):  # The drawing has ended because mouse up
+                start_point, end_point = None, None  # enable grabbing a new rect
+                dragging = False
+                prior_rect = None
 
 
                             
