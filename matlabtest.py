@@ -493,6 +493,7 @@ Mgl2[np.ix_(num2,num2)] = M2[np.ix_(num1,num1)]
 
 Kgl = Kgl1+Kgl2
 Mgl = Mgl1+Mgl2
+
 # spy mgl
 
 # delte 6 first rows and columns
@@ -508,54 +509,28 @@ Mgl = np.delete(Mgl, np.s_[0:6], axis=1)
 Mgl = np.delete(Mgl, np.s_[-6:], axis=0)
 Mgl = np.delete(Mgl, np.s_[-6:], axis=1)
 
+np.savetxt('Kgl.txt', Kgl, delimiter=',')
+np.savetxt('Mgl.txt', Mgl, delimiter=',')
 Mgl_inv = np.linalg.inv(Mgl)
+np.savetxt('Mgl_inv.txt', Mgl_inv, delimiter=',')
 
-print(Mgl)
-#write mgl to file
-np.savetxt('Mgl1.txt', Mgl1, fmt='%1.4e', delimiter='\t')
-np.savetxt('Mgl2.txt', Mgl2, fmt='%1.4e', delimiter='\t')
-
-
-#print 5 first rows of Kgl
-print(Mgl[0:5,:])
-# write in a file
-np.savetxt('Mgl_inv.txt', Kgl, delimiter=',')
-
-
-# calculate eigenvalues and eigenvectors
+# caculate natural frequencies
 eigval, eigvec = np.linalg.eig(np.dot(Mgl_inv, Kgl))
+eigval = np.sqrt(eigval)
+eigval = np.sort(eigval)
+eigval = eigval/2/np.pi
+# delete all value under 1 
+eigval = eigval[eigval>1]
+print(eigval)
 
-# sort eigenvalues and eigenvectors
-# sort only with real part and ignore imaginary part
-idx = eigval.real.argsort()
-eigval = eigval[idx]
-eigvec = eigvec[:,idx]
-
-
-
-# calculate natural frequencies
-w = np.sqrt(eigval)
-f = w/(2*np.pi)
-
-# calculate mode shapes
-phi = np.dot(Mgl_inv, eigvec)
-
-# calculate modal participation factors
-mpf = np.zeros((len(phi[0]), len(phi[0])))
-for i in range(len(phi[0])):
-    for j in range(len(phi[0])):
-        mpf[i,j] = np.dot(phi[:,i], phi[:,j])
-
-# just show 10 first natural frequencies
+# plot natural frequencies
+plt.plot(eigval)
+plt.show()
 
 
 
 
 
-
-# eigenvalues and eigenvectors
-# impot LI from scipy.linalg
-import scipy.linalg as LI
 
 
 
