@@ -137,29 +137,29 @@ class Window:
             elif event == "-GRAPH-":  # if there's a "Graph" event, then it's a mouse
                 x, y = values["-GRAPH-"]
                 if not self.dragging:
-                    start_point = (x, y)
+                    self.start_point = (x, y)
                     self.dragging = True
                     drag_figures = self.graph.get_figures_at_location((x,y))
                     lastxy = x, y
                 else:
-                    end_point = (x, y)
+                    self.end_point = (x, y)
                 if self.prior_rect:
-                    self.graph.delete_figure(prior_rect)
+                    self.graph.delete_figure(self.prior_rect)
                 delta_x, delta_y = x - lastxy[0], y - lastxy[1]
                 lastxy = x,y
-                if None not in (start_point, self.end_point):
+                if None not in (self.start_point, self.end_point):
                     if values['-MOVE-']:
                         for fig in drag_figures:
                             self.graph.move_figure(fig, delta_x, delta_y)
                             self.graph.update()
                     elif values['-RECT-']:
-                        prior_rect = self.graph.draw_rectangle(start_point, end_point,fill_color='green', line_color='red')
+                        self.prior_rect = self.graph.draw_rectangle(self.start_point, self.end_point,fill_color='green', line_color='red')
                     elif values['-CIRCLE-']:
-                        prior_rect = self.graph.draw_circle(start_point, end_point[0]-start_point[0], fill_color='red', line_color='green')
+                        self.prior_rect = self.graph.draw_circle(self.start_point, self.end_point[0]-self.start_point[0], fill_color='red', line_color='green')
                     elif values['-LINE-']:
-                        prior_rect = self.graph.draw_line(start_point, end_point, width=4)
+                        self.prior_rect = self.graph.draw_line(self.start_point, self.end_point, width=4)
                     elif values['-POINT-']:
-                        prior_rect = self.graph.draw_point(start_point, size=1)
+                        self.prior_rect = self.graph.draw_point(self.start_point, size=1)
                     elif values['-ERASE-']:
                         for figure in drag_figures:
                             self.graph.delete_figure(figure)
@@ -174,9 +174,9 @@ class Window:
                         for fig in drag_figures:
                             self.graph.send_figure_to_back(fig)
             elif event.endswith('+UP'):  # The drawing has ended because mouse up
-                start_point, end_point = None, None  # enable grabbing a new rect
-                dragging = False
-                prior_rect = None
+                self.start_point, self.end_point = None, None  # enable grabbing a new rect
+                self.dragging = False
+                self.prior_rect = None
 
 
                             
