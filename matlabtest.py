@@ -1,11 +1,12 @@
 # convert this matlab code to python
 # http://www.mathworks.com/help/matlab/ref/fft.html
+import time
 from matplotlib import pyplot as plt
 import numpy as np
 
 
 # convert this matlab code to python
-
+start = time.time()
 
 
 L=1  
@@ -520,13 +521,11 @@ eigval = np.sqrt(eigval)
 eigval = np.sort(eigval)
 eigval = eigval/2/np.pi
 # delete all value under 1 
-eigval = eigval[eigval>1]
-print(eigval)
-
-# plot natural frequencies
-plt.plot(eigval)
-plt.show()
-
+eigval = eigval[eigval>4]
+# keep 10 first values
+eigval = eigval[0:10]
+end = time.time()
+print(len(eigval))
 
 
 
