@@ -15,30 +15,30 @@ class Window:
     def __init__(self):
         # Acier de construction': 210E9, 'Acier inxydable': 203E9, 'Aluminum': 69E9, 'Cuivre': 124E9, 'Titane': 114E9, 'Verre': 69E9, 'Béton'
         self.commun_input = [[ps.Text('Material'), ps.Combo(['Acier de construction','Acier inxydable','Aluminum','Cuivre','Titane','Verre','Béton'], key='material')],
-                            [ ps.Text('Length'), ps.InputText(key='L_tot')],
-                            [ps.Text('nbr_elements'), ps.InputText(key='nbr_elements')],
+                            [ ps.Text('Length [cm]'), ps.InputText(key='L_tot')],
+                            [ps.Text('nbr_elements (n)'), ps.InputText(key='nbr_elements')],
                 
         ]
 
-        self.rectangle_input = [[ps.Text('Height'), ps.InputText(key='h_rec')],
-                            [ps.Text('Width'), ps.InputText(key='b_rec')],
+        self.rectangle_input = [[ps.Text('Height [cm]'), ps.InputText(key='h_rec')],
+                            [ps.Text('Width [cm]'), ps.InputText(key='b_rec')],
         ]
 
-        self.circle_input = [[ps.Text('Radius'), ps.InputText(key='r_circle')],
+        self.circle_input = [[ps.Text('Radius [cm]'), ps.InputText(key='r_circle')],
         ]
 
-        self.Ipn = [[ps.Text('Height'), ps.InputText(key='h')],
-                            [ps.Text('Base'), ps.InputText(key='b')],
+        self.Ipn = [[ps.Text('Height [cm]'), ps.InputText(key='h')],
+                            [ps.Text('Base [cm]'), ps.InputText(key='b')],
         ]
 
-        self.rectangle_creuse_input = [[ps.Text('Height_ext'), ps.InputText(key='h_ext')],
-                            [ps.Text('height_int'), ps.InputText(key='h_int')],
-                            [ps.Text('Width_ext'), ps.InputText(key='b_ext')],
-                            [ps.Text('Width_int'), ps.InputText(key='b_int')],
+        self.rectangle_creuse_input = [[ps.Text('Height_ext [cm]'), ps.InputText(key='h_ext')],
+                            [ps.Text('height_int [cm]'), ps.InputText(key='h_int')],
+                            [ps.Text('Width_ext [cm]'), ps.InputText(key='b_ext')],
+                            [ps.Text('Width_int [cm]'), ps.InputText(key='b_int')],
         ]
 
-        self.circle_creuse_input = [[ps.Text('Radius'), ps.InputText(key='r_creuse')],
-                            [ps.Text('thickness'), ps.InputText(key='thickness')],
+        self.circle_creuse_input = [[ps.Text('Radius [cm]'), ps.InputText(key='r_creuse')],
+                            [ps.Text('thickness [cm]'), ps.InputText(key='thickness')],
         ]
 
        # create a layout, user can initialiy choose type of bar, commun input originaly appear, then accoring user choise of bar, show other input
