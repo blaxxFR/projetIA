@@ -21,19 +21,43 @@ def create_inputs(nbElements):
    Base = np.random.uniform(low=Length/100, high=Length/10)
    Height = np.random.uniform(low=Length/100, high=Length/10)
    
-   d = dict();
-   d['NbElts'] = nbElements
-   d['L_tot'] = Length
-   d['rho'] = rhoMat[iMat]
-   d['h'] = Height
-   d['b'] = Base
-   d['S'] = d.get('b')*d.get('h')
-   d['I'] = (d.get('b')*pow(d.get('h'),3))/12
-   d['L'] = d.get('L_tot')/d.get('NbElts')
-   d['E'] = EMat[iMat]
-   d['Mat'] = Mat[iMat]
-   d['nu'] = 0.3
-   return d
+   d1 = dict();
+   d1['NbElts_1'] = nbElements
+   d1['L_tot_1'] = Length
+   d1['rho_1'] = rhoMat[iMat]
+   d1['h_1'] = Height
+   d1['b_1'] = Base
+   d1['S_1'] = d1.get('b_1')*d1.get('h_1')
+   d1['I_1'] = (d1.get('b_1')*pow(d1.get('h_1'),3))/12
+   d1['L_1'] = d1.get('L_tot_1')/d1.get('NbElts_1')
+   d1['E_1'] = EMat[iMat]
+   d1['Mat_1'] = Mat[iMat]
+   d1['nu_1'] = 0.3
+
+   Mat = ['Acier de construction', 'Acier inoxydable', 'Aluminium', 'Cuivre', 'Titane', 'Verre', 'Beton']
+   EMat = [210E9, 203E9, 69E9, 124E9, 114E9, 69E9, 30E9]
+   rhoMat = [7850, 7800, 2700, 8900, 4510, 2500, 2400]
+   iMat = randint(0, 6)
+
+   Length = np.random.uniform(low=0.1, high=1)
+   Base = np.random.uniform(low=Length / 100, high=Length / 10)
+   Height = np.random.uniform(low=Length / 100, high=Length / 10)
+
+   d2 = dict();
+   d2['NbElts_2'] = nbElements
+   d2['L_tot_2'] = Length
+   d2['rho_2'] = rhoMat[iMat]
+   d2['h_2'] = Height
+   d2['b_2'] = Base
+   d2['S_2'] = d2.get('b_2') * d2.get('h_2')
+   d2['I_2'] = (d2.get('b_2') * pow(d2.get('h_2'), 3)) / 12
+   d2['L_2'] = d2.get('L_tot_2') / d2.get('NbElts_2')
+   d2['E_2'] = EMat[iMat]
+   d2['Mat_2'] = Mat[iMat]
+   d2['nu_2'] = 0.3
+
+
+   return d1, d2
 
 
 def createdata(nbElements,nbFreq): #crée le jeu de données
@@ -41,22 +65,21 @@ def createdata(nbElements,nbFreq): #crée le jeu de données
     
     nbcapteur = nbFreq 
 
-    nbre_deg_noeud = 2 #DDL par noeuds
+    nbre_deg_noeud = 6 #DDL par noeuds
 
-    nb_noeuds = nbElements + 1 
     
-    Params = create_inputs(nbElements)
-    
-    L_tot = Params.get('L_tot')
-    rho = Params.get('rho')
-    h = Params.get('h')
-    b = Params.get('b')
-    S = Params.get('S')
-    I = Params.get('I')
-    L = Params.get('L')
-    E = Params.get('E')
-    Mat = Params.get('Mat')
-    nu = Params.get('nu')
+    Params1, Params2 = create_inputs(nbElements)
+    # PROCESS POUTRE 1
+    L_tot = Params1.get('L_tot_1')
+    rho = Params1.get('rho_1')
+    h = Params1.get('h_1')
+    b = Params1.get('b_1')
+    S = Params1.get('S_1')
+    I = Params1.get('I_1')
+    L = Params1.get('L_1')
+    E = Params1.get('E_1')
+    Mat = Params1.get('Mat_1')
+    nu = Params1.get('nu_1')
     G=E/(2*(1+nu))  
 
     Iy=(b*(h**3))/12
@@ -268,9 +291,23 @@ def createdata(nbElements,nbFreq): #crée le jeu de données
     Nb_elem1 = nb_elem
     L1 = L
 
-  
+    # PROCESS POUTRE 2
+    L_tot = Params2.get('L_tot_2')
+    rho = Params2.get('rho_2')
+    h = Params2.get('h_2')
+    b = Params2.get('b_2')
+    S = Params2.get('S_2')
+    I = Params2.get('I_2')
+    L = Params2.get('L_2')
+    E = Params2.get('E_2')
+    Mat = Params2.get('Mat_2')
+    nu = Params2.get('nu_2')
+    G = E / (2 * (1 + nu))
 
-    nb_elem=10
+    Iy = (b * (h ** 3)) / 12
+    Iz = (h * (b ** 3)) / 12
+    Jpol = Iy + Iz
+
 
     Ke_loc_b=(E*S/L)*np.matrix([[1, -1], [1 ,-1]])
   
@@ -559,8 +596,13 @@ def createdata(nbElements,nbFreq): #crée le jeu de données
     eigval = eigval[eigval>4]
     # delete all value over 10000
     eigval = eigval[0:nbcapteur]
+
+    #concatenate dict Parameters Params1 and Params2
+    Params = {**Params1, **Params2}
+
     
-    return Params,np.float32(np.round(eigval, decimals=4))
+
+    return Params, np.float32(np.round(eigval, decimals=4))
 
 
 class myDataset(Dataset):
@@ -568,11 +610,10 @@ class myDataset(Dataset):
         self.samples=NBsamples #sample : attribut de la classe
 
         NbFreq = 8
-        NbElts = 10
         self.y_data = []
         self.x_data = []
         for i in range(NBsamples):
-            
+            NbElts = randint(10, 50)
             if i % 100 == 0:
                 print(i)
             inputs, outputs = createdata(NbElts, NbFreq)  # crée les fréquences en prenant en compte les défauts
@@ -588,7 +629,7 @@ class myDataset(Dataset):
 from torch.utils.data import DataLoader, Dataset 
 targets_tensor=torch.tensor([])
 print("---------start------")
-sample_nb=100000
+sample_nb=5000
 test_dataset = myDataset(sample_nb)    #choisi le dataset en fonction des données enoncées
 
 
@@ -599,7 +640,7 @@ for i in range(len(test_dataset.y_data)):
     python_list_from_pytorch_tensor = np.vstack((python_list_from_pytorch_tensor, test_dataset.y_data[i].tolist()))
 
 
-with open('test_treillis_10elts.csv', 'w') as f:
+with open('test_treillis.csv', 'w') as f:
     writer = csv.writer(f)
     header = ''
     for i in python_list_from_pytorch_tensor:
@@ -611,7 +652,7 @@ with open('test_treillis_10elts.csv', 'w') as f:
         f.write('\n')        
     
 
-with open('dict_treillis_10elts.csv', 'w') as csv_file:
+with open('dict_treillis.csv', 'w') as csv_file:
     writer = csv.writer(csv_file)
     header = ''
     for key,_ in dicttab[0].items():
