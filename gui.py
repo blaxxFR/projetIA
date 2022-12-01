@@ -71,15 +71,19 @@ class Window:
            [ps.R('Move Everything', 1, key='-MOVEALL-', enable_events=True)],
            [ps.R('Move Stuff', 1, True, key='-MOVE-', enable_events=True)]  ,]
 
+        # load a png 
+        self.images_path= [""]
+
+        self.image_colmun = [[ps.Image(filename='schemes_load/Rectangle.png', key='-IMAGE2-')],[ps.Image(filename='schemes_load\Cantilever_beam.png', key='-IMAGE-')]]
         self.canvas_column = [[ps.Graph(canvas_size=(400, 400),
         graph_bottom_left=(0, 0),
         graph_top_right=(400, 400),
         key="-GRAPH-",
         change_submits=True,  # mouse click events
-        background_color='lightblue',
+        background_color='white',
         drag_submits=True),ps.Col(self.forme_column)]]
         self.layout = [
-            [ ps.Column(self.input_column),ps.VSeparator(), ps.Column(self.canvas_column)]
+            [ ps.Column(self.input_column),ps.VSeparator(), ps.Column(self.image_colmun)]
             
         ]
         
@@ -112,29 +116,50 @@ class Window:
          # create a window with the layout
    
 
-       
+        #have a white background
+        
         
 
-        self.window = ps.Window('Akinapoutre', self.layout,finalize=True)
-        self.graph = self.window["-GRAPH-"]  # type: sg.Graph
+        self.window = ps.Window('Akinapoutre', self.layout,finalize=True,background_color='grey')
+    """    # self.graph = self.window["-GRAPH-"]  # type: sg.Graph
         self.dragging = False
         self.start_point = self.end_point = self.prior_rect = None
-        self.graph.bind('<Button-3>', '+RIGHT+')
+        self.graph.bind('<Button-3>', '+RIGHT+')"""
 
-    def selected_tab(self):
-        """return the selected tab"""
-        return self.tab_group.find_key_from_tab_name()
+    # make a function to know wich tab is selected
+    def get_tab(self):
+        return self.window['tabgroup'].get()
 
-        
 
     def event_loop(self,window):
         while True:
             event, values = window.read()
+            print(self.get_tab())
             if event == 'Quit' or event == ps.WIN_CLOSED:
                 break
             elif event == 'Predict':
                 print(self.predict())
-            elif event == "-GRAPH-":  # if there's a "Graph" event, then it's a mouse
+            # if rectangle tab is selected update IMAGE2 by rectangle image
+            elif self.get_tab() == 'rectangle':
+
+
+                self.window['-IMAGE2-'].update(filename='schemes_load/Rectangle.png')
+            
+            # if circle tab is selected update IMAGE2 by circle image
+            elif self.get_tab() == 'circle':
+                self.window['-IMAGE2-'].update(filename='schemes_load/Cercle.png')
+            
+            elif self.get_tab() == 'rectangle_creuse':
+                self.window['-IMAGE2-'].update(filename='schemes_load/Rectangle_creux.png')
+            
+            elif self.get_tab() == 'circle_creuse':
+                self.window['-IMAGE2-'].update(filename='schemes_load/Cercle_creux.png')
+
+            
+
+
+
+            """elif event == "-GRAPH-":  # if there's a "Graph" event, then it's a mouse
                 x, y = values["-GRAPH-"]
                 if not self.dragging:
                     self.start_point = (x, y)
@@ -176,7 +201,7 @@ class Window:
             elif event.endswith('+UP'):  # The drawing has ended because mouse up
                 self.start_point, self.end_point = None, None  # enable grabbing a new rect
                 self.dragging = False
-                self.prior_rect = None
+                self.prior_rect = None"""
 
 
                             
@@ -196,6 +221,8 @@ class Window:
             type_bar = self.tab_group.Get()
             var_values = self.get_input(type_bar)
             if type_bar == 'rectangle':
+               
+                
                 #  ['L_tot','rho', 'h','b']
                 #L_tho = L_tot/100
                 length = float(var_values[0])/100
@@ -218,6 +245,14 @@ class Window:
                 self.window['output'].update(tmp_string)
 
             if type_bar == 'circle':
+                # UPDATE IMAGE2 by circle and update window
+                self.window['image2'].update(filename='circle.png')
+                
+
+
+                
+               
+                
                 #  ['L_tot','rho', 'r']
                 #L_tho = L_tot/100S
                 length = float(var_values[0])/100
@@ -237,6 +272,8 @@ class Window:
             if type_bar == 'ipn':
                 surface_ipn = surface_ipn(var_values[1], var_values[2])
             if type_bar == 'rectangle_creuse':
+                # update IMAGE2 with schemes_load/rectangle_creuse.png
+                
                 #  ['L_tot','rho', 'h','b','hr','br']
                 #L_tho = L_tot/100
                 length = float(var_values[0])/100
@@ -257,6 +294,8 @@ class Window:
                     tmp_string += "Frequence "+ str(i+2) + " = " + str(other_freq[0][i]) + " Hz\n"
                 self.window['output'].update(tmp_string)
             if type_bar == 'circle_creuse':
+                # update IMAGE2 with schemes_load/circle_creuse.png
+            
                 #  ['L_tot','rho', 'r_ext','r_int']
                 #L_tho = L_tot/100S
                 length = float(var_values[0])/100
