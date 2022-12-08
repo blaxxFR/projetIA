@@ -120,7 +120,7 @@ class Window:
         
         
 
-        self.window = ps.Window('Akinapoutre', self.layout,finalize=True,background_color='grey')
+        self.window = ps.Window('Akinapoutre', self.layout,finalize=True)
     """    # self.graph = self.window["-GRAPH-"]  # type: sg.Graph
         self.dragging = False
         self.start_point = self.end_point = self.prior_rect = None
@@ -246,7 +246,7 @@ class Window:
 
             if type_bar == 'circle':
                 # UPDATE IMAGE2 by circle and update window
-                self.window['image2'].update(filename='circle.png')
+                self.window['image2'].update(filename='schemes_loads/cercle.png')
                 
 
 
